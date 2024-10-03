@@ -2,7 +2,7 @@ import requests
 import hashlib
 import os
 
-url = "https://www.portwars.com/Portwars/index.html"
+url = "https://httpbin.org/uuid"
 discord_webhook_url = "https://discord.com/api/webhooks/1287762242300809277/oo7Lw_5xgLnX4nBMWHIQCql3xL_9JoMIpe7YKzX7NLl0Y_WQOXu51czoA9S37C1mxxjz"
 hash_file = "previous_hash.txt"
 
