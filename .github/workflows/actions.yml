@@ -10,13 +10,13 @@ jobs:
     runs-on: ubuntu-latest  # Specify the runner environment
     strategy:
       matrix:
-        python-version: [3.8, 3.9, 3.10, 3.11]  # Ensure these versions are available
+        python-version: [3.8, 3.9, 3.10, 3.11]  # Use supported versions
 
     steps:
       - uses: actions/checkout@v3
       
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@latest  # Use the latest version of setup-python
+        uses: actions/setup-python@v4  # Use the latest stable version
         with:
           python-version: ${{ matrix.python-version }}
 
