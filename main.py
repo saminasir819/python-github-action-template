@@ -1,34 +1,54 @@
-import logging
-import logging.handlers
+import requests
+import hashlib
 import os
 
-import requests
+url = "https://www.portwars.com/Portwars/index.html"
+discord_webhook_url = "https://discord.com/api/webhooks/1287762242300809277/oo7Lw_5xgLnX4nBMWHIQCql3xL_9JoMIpe7YKzX7NLl0Y_WQOXu51czoA9S37C1mxxjz"
+hash_file = "previous_hash.txt"
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-logger_file_handler = logging.handlers.RotatingFileHandler(
-    "status.log",
-    maxBytes=1024 * 1024,
-    backupCount=1,
-    encoding="utf8",
-)
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-logger_file_handler.setFormatter(formatter)
-logger.addHandler(logger_file_handler)
+def fetch_website_content(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        return response.text
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching the website: {e}")
+        return None
 
-try:
-    SOME_SECRET = os.environ["SOME_SECRET"]
-except KeyError:
-    SOME_SECRET = "Token not available!"
-    #logger.info("Token not available!")
-    #raise
+def get_hash(content):
+    return hashlib.sha256(content.encode('utf-8')).hexdigest()
 
+def check_for_changes():
+    content = fetch_website_content(url)
+    if content is None:
+        return
+
+    current_hash = get_hash(content)
+
+    if os.path.exists(hash_file):
+        with open(hash_file, 'r') as file:
+            previous_hash = file.read()
+
+        if previous_hash == current_hash:
+            print("No changes detected.")
+        else:
+            print("Website has changed!")
+            trigger_alert()
+
+    with open(hash_file, 'w') as file:
+        file.write(current_hash)
+
+def trigger_alert():
+    message = {
+        "content": f"ALERT! The content of {url} has changed.",
+        "username": "Website Monitor"
+    }
+    try:
+        response = requests.post(discord_webhook_url, json=message)
+        response.raise_for_status()
+        print("Alert sent to Discord!")
+    except requests.exceptions.RequestException as e:
+        print(f"Error sending alert to Discord: {e}")
 
 if __name__ == "__main__":
-    logger.info(f"Token value: {SOME_SECRET}")
-
-    r = requests.get('https://weather.talkpython.fm/api/weather/?city=Berlin&country=DE')
-    if r.status_code == 200:
-        data = r.json()
-        temperature = data["forecast"]["temp"]
-        logger.info(f'Weather in Berlin: {temperature}')
+    check_for_changes()
